@@ -15,8 +15,8 @@ def weights_dictionary(training_file):
             next(csvfr)
             for row in csvfr:
                 for entry in row[1:]:
-                    #initialize with random weights between -1 and 1
-                    weights[entry] = 2*random.random() - 1
+                    #initialize with random weights between 0 and 1
+                    weights[entry] = random.random()
     except IOError as ioerr:
         print("File error: " + str(ioerr))
     return weights
@@ -34,14 +34,14 @@ def train(training_file):
     iterCount = 1
     #for i in range(1000):
     while (outputs != outputs_previous):
-        print("iteration", iterCount)
+        #print("iteration", iterCount)
         iterCount += 1
         if iterCount > 3: 
             diff = [(outputs[i]-outputs_previous[i]) for i in range(len(outputs))]
             diffsum = 0
             for entry in diff:
                 diffsum += abs(entry)
-            if (diffsum < 350 and iterCount > 700):
+            if (diffsum < 350 and iterCount > 1000):
                 print("Difference = " + str(diffsum))
                 print("Iteration " + str(iterCount))
                 break
@@ -60,7 +60,7 @@ def train(training_file):
                     activation += weights[entry]
 
                 #Decide whether neuron fires or not
-                if (activation > 0):
+                if (activation > 0.5):
                     activation = 1
                     outputs.append(1)
                 else:
@@ -75,7 +75,7 @@ def train(training_file):
                 for entry in row[1:]:
                     weights[entry] += eta*(int(row[0]) - activation)
 
-    return weights
+    #return weights
 
 def predict(training_file, testing_file):
     '''Take as input the training and testing files in csv format. The first column in
@@ -86,7 +86,6 @@ def predict(training_file, testing_file):
     weights = train(training_file)
 
     outputs = []
-    outputs_real = []
     with open(testing_file,'r') as csvf:
         csvfr = csv.reader(csvf)
         #skip first row of headers
@@ -97,22 +96,12 @@ def predict(training_file, testing_file):
             
             #compute the activation with the current weights
             for entry in row[1:]:
-                if entry in weights:
-                    activation += weights[entry]
-                else:
-                    activation += 2*random.random() - 1
+                activation += weights[entry]
 
             #Decide whether neuron fires or not
-            outputs_real.append((activation + 2)/2)
-            if (activation > 0):
+            if (activation > 0.5):
                 outputs.append(1)
             else:
                 outputs.append(0)
 
-    return outputs_real
-
-def write_outputs(training_file, testing_file):
-    outputs_real = predict(training_file, testing_file)
-    with open("output_file.csv", 'w') as output_file:
-        for i in range(len(outputs_real)):
-            print(str(i + 1) + ',' + str(outputs_real[i]), file = output_file)
+    return outputs
